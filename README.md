@@ -1,55 +1,56 @@
-# 🎵 SoundWave — پروژه درس برنامه‌نویسی وب
+# 🎵 SoundWave
 
-> سرویس استریم موسیقی | دانشگاه صنعتی شریف | بهار ۱۴۰۵
+سرویس استریم موسیقی — پروژه درس برنامه‌سازی وب ۱۴۰۵
 
-## 👥 اعضای گروه
+دانشگاه صنعتی شریف / دانشکده مهندسی کامپیوتر  
+استاد درس: علی ابریشمی
 
-| نقش | نام | مسئولیت اصلی |
-|-----|-----|-------------|
-| سرگروه | [نام شما] | Auth + پروفایل + داشبورد مدیریت |
-| عضو دوم | [نام] | خانه + پلی‌لیست + آلبوم/آهنگ + مدیریت آثار |
-| عضو سوم | [نام] | پخش‌کننده موسیقی + بخش امتیازی |
+---
 
-## 🗂 ساختار ریپو
+## اعضای گروه
 
-```
-/
-├── frontend/          ← پروژه React/Next.js
-├── docs/              ← مستندات و چک‌لیست‌ها
-└── .github/           ← Issue templates
-```
+| نام | نقش |
+|-----|-----|
+| عضو اول | - |
+| عضو دوم | - |
+| عضو سوم | - |
 
-## 🚀 شروع سریع
+---
+
+## راه‌اندازی پروژه
 
 ```bash
-cd frontend
+git clone https://github.com/ftmsomian/soundwave.git
+cd soundwave/frontend
 npm install
 npm run dev
 ```
 
-## 📋 لینک‌های مهم
+سپس مرورگر را باز کنید و به `http://localhost:3000` بروید.
 
-- [چک‌لیست نفر اول](docs/checklist-member1.md)
-- [چک‌لیست نفر دوم](docs/checklist-member2.md)
-- [چک‌لیست نفر سوم](docs/checklist-member3.md)
-- [چک‌لیست نهایی پروژه](docs/final-checklist.md)
-- [قراردادهای کدنویسی](docs/conventions.md)
-- [ساختار Mock Data](docs/mock-data-guide.md)
+---
 
-## 🌿 قراردادهای برنچ
+## مستندات
 
-| نوع | فرمت | مثال |
-|-----|------|------|
-| فیچر | `feature/نام-فیچر` | `feature/auth-pages` |
-| باگ‌فیکس | `fix/نام-باگ` | `fix/player-skip-bug` |
-| بهبود | `refactor/نام` | `refactor/playlist-component` |
+- [راهنمای Git](docs/git-guide.md)
+- [قراردادهای کد](docs/conventions.md)
+- [راهنمای داده‌های Mock](docs/mock-data-guide.md)
 
-**برنچ اصلی:** `main` (فقط کد تست‌شده)  
-**برنچ توسعه:** `dev` (ادغام فیچرها اینجا)
+---
 
-## ✅ قوانین Pull Request
+## ساختار پروژه
 
-1. هر PR باید به برنچ `dev` باشه، نه `main`
-2. حداقل یه نفر دیگه باید Review کنه
-3. تست‌ها باید پاس بشن
-4. توضیح کوتاه از تغییرات الزامیه
+```
+soundwave/
+├── docs/          ← مستندات و راهنماها
+└── frontend/      ← پروژه Next.js
+    └── src/
+        ├── types/       ← TypeScript interfaces
+        ├── constants/   ← ثابت‌ها و config
+        ├── mock/        ← داده‌های آزمایشی
+        ├── pages/       ← صفحات Next.js
+        ├── components/  ← کامپوننت‌ها
+        ├── hooks/       ← Custom hooks
+        ├── context/     ← React Context
+        └── utils/       ← توابع کمکی
+```
