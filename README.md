@@ -1,56 +1,55 @@
-# 🎵 SoundWave
+# 🎵 SoundWave — پروژه درس برنامه‌نویسی وب
 
-سرویس استریم موسیقی — پروژه درس برنامه‌سازی وب ۱۴۰۵
+> سرویس استریم موسیقی | دانشگاه صنعتی شریف | بهار ۱۴۰۵
 
-دانشگاه صنعتی شریف / دانشکده مهندسی کامپیوتر  
-استاد درس: علی ابریشمی
+## 👥 اعضای گروه
 
----
+| نقش | نام | مسئولیت اصلی |
+|-----|-----|-------------|
+| عضو اول | [نام] | Auth + پروفایل + داشبورد مدیریت |
+| عضو دوم | [نام] | خانه + پلی‌لیست + آلبوم/آهنگ + مدیریت آثار |
+| عضو سوم | [نام] | پخش‌کننده موسیقی + بخش امتیازی |
 
-## اعضای گروه
+## 🗂 ساختار ریپو
 
-| نام | نقش |
-|-----|-----|
-| عضو اول | - |
-| عضو دوم | - |
-| عضو سوم | - |
+```
+/
+├── frontend/          ← پروژه React/Next.js
+├── docs/              ← مستندات و چک‌لیست‌ها
+└── .github/           ← Issue templates
+```
 
----
-
-## راه‌اندازی پروژه
+## 🚀 شروع سریع
 
 ```bash
-git clone https://github.com/ftmsomian/soundwave.git
-cd soundwave/frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-سپس مرورگر را باز کنید و به `http://localhost:3000` بروید.
+## 📋 لینک‌های مهم
 
----
+- [چک‌لیست نفر اول](docs/checklist-member1.md)
+- [چک‌لیست نفر دوم](docs/checklist-member2.md)
+- [چک‌لیست نفر سوم](docs/checklist-member3.md)
+- [چک‌لیست نهایی پروژه](docs/final-checklist.md)
+- [قراردادهای کدنویسی](docs/conventions.md)
+- [ساختار Mock Data](docs/mock-data-guide.md)
 
-## مستندات
+## 🌿 قراردادهای برنچ
 
-- [راهنمای Git](docs/git-guide.md)
-- [قراردادهای کد](docs/conventions.md)
-- [راهنمای داده‌های Mock](docs/mock-data-guide.md)
+| نوع | فرمت | مثال |
+|-----|------|------|
+| فیچر | `feature/نام-فیچر` | `feature/auth-pages` |
+| باگ‌فیکس | `fix/نام-باگ` | `fix/player-skip-bug` |
+| بهبود | `refactor/نام` | `refactor/playlist-component` |
 
----
+**برنچ اصلی:** `main` (فقط کد تست‌شده)  
+**برنچ توسعه:** `dev` (ادغام فیچرها اینجا)
 
-## ساختار پروژه
+## ✅ قوانین Pull Request
 
-```
-soundwave/
-├── docs/          ← مستندات و راهنماها
-└── frontend/      ← پروژه Next.js
-    └── src/
-        ├── types/       ← TypeScript interfaces
-        ├── constants/   ← ثابت‌ها و config
-        ├── mock/        ← داده‌های آزمایشی
-        ├── pages/       ← صفحات Next.js
-        ├── components/  ← کامپوننت‌ها
-        ├── hooks/       ← Custom hooks
-        ├── context/     ← React Context
-        └── utils/       ← توابع کمکی
-```
+1. هر PR باید به برنچ `dev` باشه، نه `main`
+2. حداقل یه نفر دیگه باید Review کنه
+3. تست‌ها باید پاس بشن
+4. توضیح کوتاه از تغییرات الزامیه
