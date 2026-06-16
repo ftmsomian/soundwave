@@ -39,12 +39,122 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }
 
   function playNext() {
-    // TODO: پیاده‌سازی کامل
-  }
+  setState(prev => {
+    if (!prev.currentSong || prev.queue.length === 0) {
+      return prev
+    }
 
-  function playPrev() {
-    // TODO: پیاده‌سازی کامل
-  }
+    if (prev.repeatMode === 'one') {
+      return {
+        ...prev,
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    if (prev.isShuffle) {
+      const availableSongs = prev.queue.filter(song => song.id !== prev.currentSong?.id)
+      const randomSongList = availableSongs.length > 0 ? availableSongs : prev.queue
+      const randomIndex = Math.floor(Math.random() * randomSongList.length)
+
+      return {
+        ...prev,
+        currentSong: randomSongList[randomIndex],
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    const currentSongIndex = prev.queue.findIndex(song => song.id === prev.currentSong?.id)
+    const nextSong = prev.queue[currentSongIndex + 1]
+
+    if (nextSong) {
+      return {
+        ...prev,
+        currentSong: nextSong,
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    if (prev.repeatMode === 'all') {
+      return {
+        ...prev,
+        currentSong: prev.queue[0],
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    return {
+      ...prev,
+      isPlaying: false,
+      currentTime: 0,
+    }
+  })
+}
+
+function playPrev() {
+  setState(prev => {
+    if (!prev.currentSong || prev.queue.length === 0) {
+      return prev
+    }
+
+    if (prev.currentTime > 3) {
+      return {
+        ...prev,
+        currentTime: 0,
+      }
+    }
+
+    if (prev.repeatMode === 'one') {
+      return {
+        ...prev,
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    if (prev.isShuffle) {
+      const availableSongs = prev.queue.filter(song => song.id !== prev.currentSong?.id)
+      const randomSongList = availableSongs.length > 0 ? availableSongs : prev.queue
+      const randomIndex = Math.floor(Math.random() * randomSongList.length)
+
+      return {
+        ...prev,
+        currentSong: randomSongList[randomIndex],
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    const currentSongIndex = prev.queue.findIndex(song => song.id === prev.currentSong?.id)
+    const previousSong = prev.queue[currentSongIndex - 1]
+
+    if (previousSong) {
+      return {
+        ...prev,
+        currentSong: previousSong,
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    if (prev.repeatMode === 'all') {
+      return {
+        ...prev,
+        currentSong: prev.queue[prev.queue.length - 1],
+        isPlaying: true,
+        currentTime: 0,
+      }
+    }
+
+    return {
+      ...prev,
+      currentTime: 0,
+    }
+  })
+}
 
   function setVolume(v: number) {
     setState(prev => ({ ...prev, volume: v }))
