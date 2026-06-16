@@ -76,3 +76,5 @@ export const APP_NAME = 'SoundWave'
 
 export const DEFAULT_AVATAR = 'https://via.placeholder.com/150/282828/B3B3B3?text=SW'
 export const DEFAULT_COVER = 'https://via.placeholder.com/300/282828/B3B3B3?text=SW'
+
+export const PLAYER_TICK_MS = 1000
