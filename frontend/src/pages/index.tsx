@@ -10,19 +10,24 @@ function SongRow({ song }: { song: Song }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: '16px',
-      padding: '10px 16px', borderRadius: '8px',
-      background: '#1e1e1e', marginBottom: '8px',
+      padding: '12px 18px', borderRadius: '14px',
+      background: '#fff', marginBottom: '10px',
+      border: '1px solid #E3EEF5',
+      boxShadow: '0 2px 8px rgba(135,180,210,0.08)',
     }}>
-      <img src={song.coverUrl} alt={song.title} width={48} height={48}
-        style={{ borderRadius: '6px', objectFit: 'cover' }} />
+      <img src={song.coverUrl} alt={song.title} width={50} height={50}
+        style={{ borderRadius: '10px', objectFit: 'cover' }} />
       <div style={{ flex: 1 }}>
-        <div style={{ color: '#fff', fontWeight: 'bold' }}>{song.title}</div>
-        <div style={{ color: '#b3b3b3', fontSize: '13px' }}>{song.artistName}</div>
+        <div style={{ color: '#2B3A45', fontWeight: 700 }}>{song.title}</div>
+        <div style={{ color: '#7A93A3', fontSize: '13px' }}>{song.artistName}</div>
       </div>
-      <div style={{ color: '#b3b3b3', fontSize: '13px' }}>
+      <div style={{
+        color: '#4FA8D8', fontSize: '13px', fontWeight: 600,
+        background: '#EAF4FB', padding: '4px 12px', borderRadius: '20px',
+      }}>
         {song.streamCount.toLocaleString()} پخش
       </div>
-      <div style={{ color: '#b3b3b3', fontSize: '13px' }}>
+      <div style={{ color: '#A0AEB8', fontSize: '13px', minWidth: '40px', textAlign: 'left' }}>
         {mins}:{secs.toString().padStart(2, '0')}
       </div>
     </div>
@@ -33,66 +38,75 @@ function AlbumCard({ album }: { album: Album }) {
   return (
     <Link href={`/album/${album.id}`} style={{ textDecoration: 'none' }}>
       <div style={{
-        background: '#1e1e1e', borderRadius: '10px',
-        padding: '16px', width: '160px', cursor: 'pointer',
+        background: '#fff', borderRadius: '16px',
+        padding: '16px', width: '170px', cursor: 'pointer',
+        border: '1px solid #E3EEF5',
+        boxShadow: '0 2px 10px rgba(135,180,210,0.1)',
       }}>
-        <img src={album.coverUrl} alt={album.title} width={128} height={128}
-          style={{ borderRadius: '8px', objectFit: 'cover', width: '100%' }} />
-        <div style={{ color: '#fff', fontWeight: 'bold', marginTop: '10px', fontSize: '14px' }}>
+        <img src={album.coverUrl} alt={album.title} width={138} height={138}
+          style={{ borderRadius: '12px', objectFit: 'cover', width: '100%' }} />
+        <div style={{ color: '#2B3A45', fontWeight: 700, marginTop: '12px', fontSize: '14px' }}>
           {album.title}
         </div>
-        <div style={{ color: '#b3b3b3', fontSize: '12px' }}>{album.artistName}</div>
+        <div style={{ color: '#7A93A3', fontSize: '12px' }}>{album.artistName}</div>
       </div>
     </Link>
   )
 }
 
 export default function HomePage() {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const topSongs = [...mockSongs].sort((a, b) => b.streamCount - a.streamCount).slice(0, 5)
-  const isGold = user?.subscription === 'gold'
+  const isGold = currentUser?.subscription === 'gold'
 
   return (
     <MainLayout>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '36px' }}>
         <div style={{
-          width: '56px', height: '56px', borderRadius: '50%',
-          background: '#333', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', fontSize: '24px',
+          width: '60px', height: '60px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '26px',
         }}>
-          {user?.avatarUrl
-            ? <img src={user.avatarUrl} width={56} height={56} style={{ borderRadius: '50%' }} />
+          {currentUser?.avatarUrl
+            ? <img src={currentUser.avatarUrl} width={60} height={60} style={{ borderRadius: '50%' }} />
             : '👤'}
         </div>
         <div>
-          <div style={{ color: '#fff', fontSize: '22px', fontWeight: 'bold' }}>
-            سلام، {user?.displayName} 👋
+          <div style={{ color: '#2B3A45', fontSize: '24px', fontWeight: 800 }}>
+            سلام، {currentUser?.displayName} 👋
           </div>
-          <div style={{ color: '#b3b3b3', fontSize: '14px' }}>به SoundWave خوش آمدی</div>
+          <div style={{ color: '#7A93A3', fontSize: '14px' }}>به SoundWave خوش آمدی</div>
         </div>
       </div>
 
-      <section style={{ marginBottom: '40px' }}>
-        <h2 style={{ color: '#fff', marginBottom: '16px' }}>🔥 آهنگ‌های پرطرفدار</h2>
+      <section style={{ marginBottom: '44px' }}>
+        <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+          آهنگ‌های پرطرفدار
+        </h2>
         {topSongs.map(song => <SongRow key={song.id} song={song} />)}
       </section>
 
-      <section style={{ marginBottom: '40px' }}>
-        <h2 style={{ color: '#fff', marginBottom: '16px' }}>💿 آخرین آلبوم‌های منتشر شده</h2>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+      <section style={{ marginBottom: '44px' }}>
+        <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+          آخرین آلبوم‌های منتشر شده
+        </h2>
+        <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
           {mockAlbums.map(album => <AlbumCard key={album.id} album={album} />)}
         </div>
       </section>
 
       {isGold && (
         <section style={{
-          background: 'linear-gradient(135deg, #2a1f00, #3d2e00)',
-          border: '1px solid #FFD700',
-          borderRadius: '12px', padding: '24px', marginBottom: '40px',
+          background: 'linear-gradient(135deg, #FFF8E7, #FFF0CC)',
+          border: '1px solid #F0D898',
+          borderRadius: '18px', padding: '28px', marginBottom: '40px',
         }}>
-          <h2 style={{ color: '#FFD700', marginBottom: '8px' }}>⭐ دسترسی زودهنگام</h2>
-          <p style={{ color: '#b3b3b3' }}>آهنگ‌های اختصاصی برای اشتراک طلایی</p>
-          <div style={{ marginTop: '16px' }}>
+          <h2 style={{ color: '#B8860B', marginBottom: '8px', fontSize: '20px', fontWeight: 800 }}>
+            دسترسی زودهنگام
+          </h2>
+          <p style={{ color: '#8A7548' }}>آهنگ‌های اختصاصی برای اشتراک طلایی</p>
+          <div style={{ marginTop: '18px' }}>
             {mockSongs.filter(s => s.isEarlyAccess).map(song => (
               <SongRow key={song.id} song={song} />
             ))}

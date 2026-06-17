@@ -14,12 +14,12 @@ interface PlaylistContextType {
 const PlaylistContext = createContext<PlaylistContextType | null>(null)
 
 export function PlaylistProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { currentUser } = useAuth()
   const [playlists, setPlaylists] = useState<Playlist[]>(
-    mockPlaylists.filter(p => p.ownerId === user?.id)
+    mockPlaylists.filter(p => p.ownerId === currentUser?.id)
   )
 
-  const maxPlaylists = user?.subscription === 'free' ? 6 : Infinity
+  const maxPlaylists = currentUser?.subscription === 'free' ? 6 : Infinity
 
   function createPlaylist(name: string) {
     if (playlists.length >= maxPlaylists) {
@@ -29,7 +29,7 @@ export function PlaylistProvider({ children }: { children: ReactNode }) {
     const newPlaylist: Playlist = {
       id: `pl_${Date.now()}`,
       name,
-      ownerId: user?.id || '',
+      ownerId: currentUser?.id || '',
       songs: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
