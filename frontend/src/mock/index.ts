@@ -1,9 +1,5 @@
 import type { User, Artist, Song, Album, Playlist, Notification, Ticket } from '@/types'
 
-// ============================================================
-// کاربران تست
-// ============================================================
-
 export const mockUsers: User[] = [
   {
     id: 'u1',
@@ -333,3 +329,58 @@ export const mockTickets: Ticket[] = [
     updatedAt: '2024-06-10T09:00:00Z',
   },
 ]
+export const seedMockData = () => {
+  if (typeof window !== 'undefined') {
+    
+    if (!localStorage.getItem('users')) {
+      localStorage.setItem('users', JSON.stringify(allMockUsers))
+    }
+    
+    if (!localStorage.getItem('artists')) {
+      localStorage.setItem('artists', JSON.stringify(mockArtists))
+    }
+    
+    if (!localStorage.getItem('songs')) {
+      localStorage.setItem('songs', JSON.stringify(mockSongs))
+    }
+    
+    if (!localStorage.getItem('albums')) {
+      localStorage.setItem('albums', JSON.stringify(mockAlbums))
+    }
+    
+    if (!localStorage.getItem('playlists')) {
+      localStorage.setItem('playlists', JSON.stringify(mockPlaylists))
+    }
+    
+    if (!localStorage.getItem('notifications')) {
+      localStorage.setItem('notifications', JSON.stringify(mockNotifications))
+    }
+    
+    if (!localStorage.getItem('tickets')) {
+      localStorage.setItem('tickets', JSON.stringify(mockTickets))
+    }
+  }
+}
+// ============================================================
+// توابع کمکی برای کار با Local Storage
+// ============================================================
+
+export const getFromStorage = <T>(key: string): T[] => {
+  // جلوگیری از ارور سمت سرور (Next.js SSR)
+  if (typeof window === 'undefined') return []
+  
+  const data = localStorage.getItem(key)
+  if (!data) return []
+  
+  try {
+    return JSON.parse(data) as T[]
+  } catch {
+    return []
+  }
+}
+
+export const setToStorage = <T>(key: string, data: T[]): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(key, JSON.stringify(data))
+  }
+}
