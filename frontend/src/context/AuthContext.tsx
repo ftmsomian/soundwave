@@ -1,14 +1,3 @@
-/**
- * AuthContext — مدیریت وضعیت لاگین
- * TODO: نفر اول این فایل رو کامل می‌کنه
- *
- * این context باید:
- * - وضعیت لاگین کاربر رو نگه داره
- * - تابع login و logout داشته باشه
- * - کاربر فعلی رو در دسترس بذاره
- * - در localStorage ذخیره کنه تا بعد از refresh از بین نره
- */
-
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 import type { User, Artist } from '@/types'
 import { allMockUsers } from '@/mock'
@@ -25,15 +14,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<CurrentUser>(null)
+  const [currentUser, setCurrentUser] = useState<CurrentUser>(allMockUsers[0] || null)
 
   function login(email: string, password: string): boolean {
-    // در فاز اول فقط ایمیل چک می‌شه، رمز همیشه test123 است
     if (password !== 'test123') return false
-
     const user = allMockUsers.find(u => u.email === email)
     if (!user) return false
-
     setCurrentUser(user)
     return true
   }

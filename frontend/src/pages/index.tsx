@@ -1,76 +1,149 @@
-import type { NextPage } from 'next'
-import { allMockUsers } from '@/mock'
+import MainLayout from '@/components/layout/MainLayout'
+import { mockSongs, mockAlbums } from '@/mock'
+import { useAuth } from '@/context/AuthContext'
+import { usePlaylistContext } from '@/context/PlaylistContext'
+import Link from 'next/link'
+import type { Song, Album } from '@/types'
 
-// صفحه اول — فقط برای نمایش حساب‌های تست
-// این صفحه بعداً به صفحه خانه تبدیل می‌شه
-
-const Home: NextPage = () => {
+function SongRow({ song }: { song: Song }) {
+  const mins = Math.floor(song.duration / 60)
+  const secs = song.duration % 60
   return (
-    <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-8">
-      {/* لوگو */}
-      <div className="mb-10 text-center">
-        <h1 className="text-5xl font-black text-[#1DB954] mb-2">🎵 SoundWave</h1>
-        <p className="text-[#B3B3B3]">سرویس استریم موسیقی</p>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '16px',
+      padding: '12px 18px', borderRadius: '14px',
+      background: '#fff', marginBottom: '10px',
+      border: '1px solid #E3EEF5',
+      boxShadow: '0 2px 8px rgba(135,180,210,0.08)',
+    }}>
+      <img src={song.coverUrl} alt={song.title} width={50} height={50}
+        style={{ borderRadius: '10px', objectFit: 'cover' }} />
+      <div style={{ flex: 1 }}>
+        <div style={{ color: '#2B3A45', fontWeight: 700 }}>{song.title}</div>
+        <div style={{ color: '#7A93A3', fontSize: '13px' }}>{song.artistName}</div>
       </div>
-
-      {/* کارت حساب‌های تست */}
-      <div className="bg-[#181818] rounded-2xl p-6 w-full max-w-2xl">
-        <h2 className="text-white font-bold text-lg mb-1">حساب‌های تست</h2>
-        <p className="text-[#B3B3B3] text-sm mb-5">رمز همه حساب‌ها: <code className="bg-[#282828] px-2 py-0.5 rounded text-[#1DB954]">test123</code></p>
-
-        <div className="space-y-2">
-          {allMockUsers.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center justify-between bg-[#282828] rounded-lg px-4 py-3 hover:bg-[#3E3E3E] transition-colors"
-            >
-              <div>
-                <p className="text-white font-medium">{user.displayName}</p>
-                <p className="text-[#B3B3B3] text-sm">{user.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <RoleBadge role={user.role} />
-                {user.role === 'user' && <SubscriptionBadge tier={user.subscription} />}
-              </div>
-            </div>
-          ))}
-        </div>
+      <div style={{
+        color: '#4FA8D8', fontSize: '13px', fontWeight: 600,
+        background: '#EAF4FB', padding: '4px 12px', borderRadius: '20px',
+      }}>
+        {song.streamCount.toLocaleString()} پخش
       </div>
-
-      <p className="mt-8 text-[#535353] text-sm text-center">
-        پروژه درس برنامه‌سازی وب — دانشگاه صنعتی شریف — بهار ۱۴۰۵
-      </p>
+      <div style={{ color: '#A0AEB8', fontSize: '13px', minWidth: '40px', textAlign: 'left' }}>
+        {mins}:{secs.toString().padStart(2, '0')}
+      </div>
     </div>
   )
 }
 
-function RoleBadge({ role }: { role: string }) {
-  const labels: Record<string, { label: string; color: string }> = {
-    user:    { label: 'کاربر',    color: 'bg-blue-500/20 text-blue-300' },
-    artist:  { label: 'هنرمند',   color: 'bg-purple-500/20 text-purple-300' },
-    support: { label: 'پشتیبان',  color: 'bg-orange-500/20 text-orange-300' },
-    admin:   { label: 'مدیر',     color: 'bg-red-500/20 text-red-300' },
-  }
-  const { label, color } = labels[role] ?? { label: role, color: 'bg-gray-500/20 text-gray-300' }
+function AlbumCard({ album }: { album: Album }) {
   return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>
-      {label}
-    </span>
+    <Link href={`/album/${album.id}`} style={{ textDecoration: 'none' }}>
+      <div style={{
+        background: '#fff', borderRadius: '16px',
+        padding: '16px', width: '170px', cursor: 'pointer',
+        border: '1px solid #E3EEF5',
+        boxShadow: '0 2px 10px rgba(135,180,210,0.1)',
+      }}>
+        <img src={album.coverUrl} alt={album.title} width={138} height={138}
+          style={{ borderRadius: '12px', objectFit: 'cover', width: '100%' }} />
+        <div style={{ color: '#2B3A45', fontWeight: 700, marginTop: '12px', fontSize: '14px' }}>
+          {album.title}
+        </div>
+        <div style={{ color: '#7A93A3', fontSize: '12px' }}>{album.artistName}</div>
+      </div>
+    </Link>
   )
 }
 
-function SubscriptionBadge({ tier }: { tier: string }) {
-  const labels: Record<string, { label: string; color: string }> = {
-    free:   { label: 'رایگان',   color: 'bg-gray-500/20 text-gray-400' },
-    silver: { label: 'نقره‌ای',  color: 'bg-gray-300/20 text-gray-200' },
-    gold:   { label: 'طلایی',    color: 'bg-yellow-500/20 text-yellow-400' },
-  }
-  const { label, color } = labels[tier] ?? { label: tier, color: '' }
+export default function HomePage() {
+  const { currentUser } = useAuth()
+  const { playlists } = usePlaylistContext()
+  const topSongs = [...mockSongs].sort((a, b) => b.streamCount - a.streamCount).slice(0, 5)
+  const isGold = currentUser?.subscription === 'gold'
+
   return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>
-      {label}
-    </span>
+    <MainLayout>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '36px' }}>
+        <div style={{
+          width: '60px', height: '60px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '26px',
+        }}>
+          {currentUser?.avatarUrl
+            ? <img src={currentUser.avatarUrl} width={60} height={60} style={{ borderRadius: '50%' }} />
+            : '👤'}
+        </div>
+        <div>
+          <div style={{ color: '#2B3A45', fontSize: '24px', fontWeight: 800 }}>
+            سلام، {currentUser?.displayName} 👋
+          </div>
+          <div style={{ color: '#7A93A3', fontSize: '14px' }}>به SoundWave خوش آمدی</div>
+        </div>
+      </div>
+
+      {playlists.length > 0 && (
+        <section style={{ marginBottom: '44px' }}>
+          <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+            آخرین پلی‌لیست‌های شنیده‌شده
+          </h2>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            {playlists.slice(0, 4).map(pl => (
+              <Link key={pl.id} href={`/playlists/${pl.id}`} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  background: '#fff', borderRadius: '16px', padding: '16px',
+                  width: '160px', cursor: 'pointer',
+                  border: '1px solid #E3EEF5',
+                  boxShadow: '0 2px 10px rgba(135,180,210,0.1)',
+                }}>
+                  <div style={{
+                    width: '128px', height: '128px', borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '40px', marginBottom: '10px',
+                  }}>🎵</div>
+                  <div style={{ color: '#2B3A45', fontWeight: 700, fontSize: '14px' }}>{pl.name}</div>
+                  <div style={{ color: '#7A93A3', fontSize: '12px' }}>{pl.songs.length} آهنگ</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section style={{ marginBottom: '44px' }}>
+        <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+          آهنگ‌های پرطرفدار
+        </h2>
+        {topSongs.map(song => <SongRow key={song.id} song={song} />)}
+      </section>
+
+      <section style={{ marginBottom: '44px' }}>
+        <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+          آخرین آلبوم‌های منتشر شده
+        </h2>
+        <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
+          {mockAlbums.map(album => <AlbumCard key={album.id} album={album} />)}
+        </div>
+      </section>
+
+      {isGold && (
+        <section style={{
+          background: 'linear-gradient(135deg, #FFF8E7, #FFF0CC)',
+          border: '1px solid #F0D898',
+          borderRadius: '18px', padding: '28px', marginBottom: '40px',
+        }}>
+          <h2 style={{ color: '#B8860B', marginBottom: '8px', fontSize: '20px', fontWeight: 800 }}>
+            دسترسی زودهنگام
+          </h2>
+          <p style={{ color: '#8A7548' }}>آهنگ‌های اختصاصی برای اشتراک طلایی</p>
+          <div style={{ marginTop: '18px' }}>
+            {mockSongs.filter(s => s.isEarlyAccess).map(song => (
+              <SongRow key={song.id} song={song} />
+            ))}
+          </div>
+        </section>
+      )}
+    </MainLayout>
   )
 }
-
-export default Home
