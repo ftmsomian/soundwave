@@ -1,6 +1,7 @@
 import MainLayout from '@/components/layout/MainLayout'
 import { usePlaylists } from '@/hooks/usePlaylists'
 import { useState } from 'react'
+import Link from 'next/link'
 
 export default function PlaylistsPage() {
   const { playlists, createPlaylist, deletePlaylist, renamePlaylist } = usePlaylists()
@@ -31,9 +32,7 @@ export default function PlaylistsPage() {
           color: '#fff', border: 'none', padding: '11px 22px',
           borderRadius: '24px', cursor: 'pointer', fontWeight: 700,
           boxShadow: '0 4px 14px rgba(79,168,216,0.35)',
-        }}>
-          + پلی‌لیست جدید
-        </button>
+        }}>+ پلی‌لیست جدید</button>
       </div>
 
       {showCreate && (
@@ -76,38 +75,43 @@ export default function PlaylistsPage() {
               border: '1px solid #E3EEF5',
               boxShadow: '0 2px 8px rgba(135,180,210,0.08)',
             }}>
-              <div style={{
-                width: '48px', height: '48px',
-                background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
-                borderRadius: '12px', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: '22px', flexShrink: 0,
-              }}>🎵</div>
+              <Link href={`/playlists/${pl.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                <div style={{
+                  width: '48px', height: '48px',
+                  background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
+                  borderRadius: '12px', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontSize: '22px', flexShrink: 0,
+                }}>🎵</div>
+                <div>
+                  {editingId !== pl.id && (
+                    <>
+                      <div style={{ color: '#2B3A45', fontWeight: 700 }}>{pl.name}</div>
+                      <div style={{ color: '#7A93A3', fontSize: '13px' }}>{pl.songs.length} آهنگ</div>
+                    </>
+                  )}
+                </div>
+              </Link>
 
-              <div style={{ flex: 1 }}>
-                {editingId === pl.id ? (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      style={{
-                        background: '#EAF4FB', border: '1px solid #DCE8F0', color: '#2B3A45',
-                        padding: '6px 12px', borderRadius: '8px'
-                      }}
-                    />
-                    <button onClick={() => handleRename(pl.id)} style={{
-                      background: 'linear-gradient(90deg, #4FA8D8, #7EC8E3)', color: '#fff', border: 'none',
-                      padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700
-                    }}>ذخیره</button>
-                    <button onClick={() => setEditingId(null)} style={{
-                      background: '#F0F0F0', color: '#5A7A8C', border: 'none',
-                      padding: '6px 12px', borderRadius: '8px', cursor: 'pointer'
-                    }}>لغو</button>
-                  </div>
-                ) : (
-                  <div style={{ color: '#2B3A45', fontWeight: 700 }}>{pl.name}</div>
-                )}
-                <div style={{ color: '#7A93A3', fontSize: '13px' }}>{pl.songs.length} آهنگ</div>
-              </div>
+              {editingId === pl.id && (
+                <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                  <input
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                    style={{
+                      background: '#EAF4FB', border: '1px solid #DCE8F0', color: '#2B3A45',
+                      padding: '6px 12px', borderRadius: '8px'
+                    }}
+                  />
+                  <button onClick={() => handleRename(pl.id)} style={{
+                    background: 'linear-gradient(90deg, #4FA8D8, #7EC8E3)', color: '#fff', border: 'none',
+                    padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700
+                  }}>ذخیره</button>
+                  <button onClick={() => setEditingId(null)} style={{
+                    background: '#F0F0F0', color: '#5A7A8C', border: 'none',
+                    padding: '6px 12px', borderRadius: '8px', cursor: 'pointer'
+                  }}>لغو</button>
+                </div>
+              )}
 
               <button onClick={() => { setEditingId(pl.id); setEditName(pl.name) }} style={{
                 background: '#EAF4FB', color: '#4FA8D8', border: 'none',

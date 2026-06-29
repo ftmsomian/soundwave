@@ -1,6 +1,7 @@
 import MainLayout from '@/components/layout/MainLayout'
 import { mockSongs, mockAlbums } from '@/mock'
 import { useAuth } from '@/context/AuthContext'
+import { usePlaylistContext } from '@/context/PlaylistContext'
 import Link from 'next/link'
 import type { Song, Album } from '@/types'
 
@@ -56,6 +57,7 @@ function AlbumCard({ album }: { album: Album }) {
 
 export default function HomePage() {
   const { currentUser } = useAuth()
+  const { playlists } = usePlaylistContext()
   const topSongs = [...mockSongs].sort((a, b) => b.streamCount - a.streamCount).slice(0, 5)
   const isGold = currentUser?.subscription === 'gold'
 
@@ -79,6 +81,35 @@ export default function HomePage() {
           <div style={{ color: '#7A93A3', fontSize: '14px' }}>به SoundWave خوش آمدی</div>
         </div>
       </div>
+
+      {playlists.length > 0 && (
+        <section style={{ marginBottom: '44px' }}>
+          <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+            آخرین پلی‌لیست‌های شنیده‌شده
+          </h2>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            {playlists.slice(0, 4).map(pl => (
+              <Link key={pl.id} href={`/playlists/${pl.id}`} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  background: '#fff', borderRadius: '16px', padding: '16px',
+                  width: '160px', cursor: 'pointer',
+                  border: '1px solid #E3EEF5',
+                  boxShadow: '0 2px 10px rgba(135,180,210,0.1)',
+                }}>
+                  <div style={{
+                    width: '128px', height: '128px', borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '40px', marginBottom: '10px',
+                  }}>🎵</div>
+                  <div style={{ color: '#2B3A45', fontWeight: 700, fontSize: '14px' }}>{pl.name}</div>
+                  <div style={{ color: '#7A93A3', fontSize: '12px' }}>{pl.songs.length} آهنگ</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section style={{ marginBottom: '44px' }}>
         <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
