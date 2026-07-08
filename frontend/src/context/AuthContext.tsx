@@ -1,56 +1,95 @@
-/**
- * AuthContext — مدیریت وضعیت لاگین
- * TODO: نفر اول این فایل رو کامل می‌کنه
- *
- * این context باید:
- * - وضعیت لاگین کاربر رو نگه داره
- * - تابع login و logout داشته باشه
- * - کاربر فعلی رو در دسترس بذاره
- * - در localStorage ذخیره کنه تا بعد از refresh از بین نره
- */
-
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { useRouter } from 'next/router'
+import { STORAGE_KEYS } from '@/constants'
+import { getFromStorage, setToStorage, allMockUsers } from '@/mock'
 import type { User, Artist } from '@/types'
-import { allMockUsers } from '@/mock'
 
-type CurrentUser = User | Artist | null
+type AuthUser = User | Artist
 
-interface AuthContextType {
-  currentUser: CurrentUser
-  login: (email: string, password: string) => boolean
-  logout: () => void
+interface IAuthContext {
+  user: AuthUser | null
+  /** alias برای کدهایی که از currentUser استفاده کرده‌اند (نفر دوم و سوم) */
+  currentUser: AuthUser | null
+  isLoading: boolean
   isLoggedIn: boolean
+  login: (email: string, password: string) => { success: boolean; error?: string }
+  logout: () => void
+  updateUser: (updates: Partial<AuthUser>) => void
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<IAuthContext | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<CurrentUser>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
-  function login(email: string, password: string): boolean {
-    // در فاز اول فقط ایمیل چک می‌شه، رمز همیشه test123 است
-    if (password !== 'test123') return false
+  // بار اول چک می‌کنیم آیا کاربر قبلاً لاگین کرده
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.AUTH_USER)
+      if (raw) setUser(JSON.parse(raw))
+    } catch {
+      // اگه مشکلی بود، کاربر لاگین‌نشده فرض می‌کنیم
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
-    const user = allMockUsers.find(u => u.email === email)
-    if (!user) return false
+  const login = (email: string, password: string): { success: boolean; error?: string } => {
+    // اول توی localStorage می‌گردیم (کاربرهایی که خودشون ثبت‌نام کردن)
+    const storedUsers = getFromStorage<User>(STORAGE_KEYS.USERS)
+    const storedArtists = getFromStorage<Artist>(STORAGE_KEYS.ARTISTS)
+    const candidates = [...storedUsers, ...storedArtists, ...allMockUsers]
 
-    setCurrentUser(user)
-    return true
+    // رمز تستی test123 برای همه‌ی mock userها هم کار می‌کنه
+    const found = candidates.find(
+      (u) => u.email === email && (u.passwordHash === password || password === 'test123')
+    )
+
+    if (!found) {
+      return { success: false, error: 'ایمیل یا رمز عبور اشتباه است' }
+    }
+
+    setUser(found)
+    localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(found))
+    return { success: true }
   }
 
-  function logout() {
-    setCurrentUser(null)
+  const logout = () => {
+    setUser(null)
+    localStorage.removeItem(STORAGE_KEYS.AUTH_USER)
+    router.push('/login')
+  }
+
+  const updateUser = (updates: Partial<AuthUser>) => {
+    if (!user) return
+    const updated = { ...user, ...updates } as AuthUser
+    setUser(updated)
+    localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(updated))
+
+    if (user.role === 'artist') {
+      const artists = getFromStorage<Artist>(STORAGE_KEYS.ARTISTS)
+      const newList = artists.map((a) => (a.id === user.id ? { ...a, ...updates } : a))
+      setToStorage(STORAGE_KEYS.ARTISTS, newList)
+    } else {
+      const users = getFromStorage<User>(STORAGE_KEYS.USERS)
+      const newList = users.map((u) => (u.id === user.id ? { ...u, ...updates } : u))
+      setToStorage(STORAGE_KEYS.USERS, newList)
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, isLoggedIn: currentUser !== null }}>
+    <AuthContext.Provider
+      value={{ user, currentUser: user, isLoading, isLoggedIn: user !== null, login, logout, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('useAuth must be used inside AuthProvider')
-  return context
+export function useAuth(): IAuthContext {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider')
+  return ctx
 }
