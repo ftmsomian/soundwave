@@ -1,76 +1,122 @@
-import type { NextPage } from 'next'
-import { allMockUsers } from '@/mock'
+import Head from 'next/head'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import MainLayout from '@/components/layout/MainLayout'
+import AlbumCard from '@/components/artist/AlbumCard'
+import SongCard from '@/components/artist/SongCard'
+import { mockSongs, mockAlbums } from '@/mock'
+import { useAuth } from '@/context/AuthContext'
+import { usePlaylistContext } from '@/context/PlaylistContext'
+import { ROUTES } from '@/constants'
+import Link from 'next/link'
 
-// صفحه اول — فقط برای نمایش حساب‌های تست
-// این صفحه بعداً به صفحه خانه تبدیل می‌شه
+export default function HomePage() {
+  const { currentUser, isLoading } = useAuth()
+  const { playlists } = usePlaylistContext()
+  const router = useRouter()
 
-const Home: NextPage = () => {
+  useEffect(() => {
+    if (!isLoading && !currentUser) {
+      router.push(ROUTES.login)
+    }
+  }, [currentUser, isLoading, router])
+
+  if (isLoading || !currentUser) {
+    return <div className="min-h-screen bg-[#121212] flex items-center justify-center text-white">در حال بارگذاری...</div>
+  }
+
+  const topSongs = [...mockSongs].sort((a, b) => b.streamCount - a.streamCount).slice(0, 5)
+  const isGold = currentUser.subscription === 'gold'
+
   return (
-    <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-8">
-      {/* لوگو */}
-      <div className="mb-10 text-center">
-        <h1 className="text-5xl font-black text-[#1DB954] mb-2">🎵 SoundWave</h1>
-        <p className="text-[#B3B3B3]">سرویس استریم موسیقی</p>
-      </div>
-
-      {/* کارت حساب‌های تست */}
-      <div className="bg-[#181818] rounded-2xl p-6 w-full max-w-2xl">
-        <h2 className="text-white font-bold text-lg mb-1">حساب‌های تست</h2>
-        <p className="text-[#B3B3B3] text-sm mb-5">رمز همه حساب‌ها: <code className="bg-[#282828] px-2 py-0.5 rounded text-[#1DB954]">test123</code></p>
-
-        <div className="space-y-2">
-          {allMockUsers.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center justify-between bg-[#282828] rounded-lg px-4 py-3 hover:bg-[#3E3E3E] transition-colors"
-            >
-              <div>
-                <p className="text-white font-medium">{user.displayName}</p>
-                <p className="text-[#B3B3B3] text-sm">{user.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <RoleBadge role={user.role} />
-                {user.role === 'user' && <SubscriptionBadge tier={user.subscription} />}
-              </div>
+    <>
+      <Head><title>خانه | SoundWave</title></Head>
+      <MainLayout>
+        {/* خوشامدگویی */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '36px' }}>
+          <div style={{
+            width: '60px', height: '60px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '26px', overflow: 'hidden', flexShrink: 0,
+          }}>
+            {currentUser.avatarUrl
+              ? <img src={currentUser.avatarUrl} width={60} height={60} style={{ borderRadius: '50%', objectFit: 'cover' }} alt="" />
+              : '👤'}
+          </div>
+          <div>
+            <div style={{ color: '#2B3A45', fontSize: '24px', fontWeight: 800 }}>
+              سلام، {currentUser.displayName} 👋
             </div>
-          ))}
+            <div style={{ color: '#7A93A3', fontSize: '14px' }}>به SoundWave خوش آمدی</div>
+          </div>
         </div>
-      </div>
 
-      <p className="mt-8 text-[#535353] text-sm text-center">
-        پروژه درس برنامه‌سازی وب — دانشگاه صنعتی شریف — بهار ۱۴۰۵
-      </p>
-    </div>
+        {/* پلی‌لیست‌های اخیر */}
+        {playlists.length > 0 && (
+          <section style={{ marginBottom: '44px' }}>
+            <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+              پلی‌لیست‌های شما
+            </h2>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              {playlists.slice(0, 4).map(pl => (
+                <Link key={pl.id} href={`/playlists/${pl.id}`} style={{ textDecoration: 'none' }}>
+                  <div style={{
+                    background: '#fff', borderRadius: '16px', padding: '16px',
+                    width: '160px', cursor: 'pointer', border: '1px solid #E3EEF5',
+                    boxShadow: '0 2px 10px rgba(135,180,210,0.1)',
+                  }}>
+                    <div style={{
+                      width: '128px', height: '128px', borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #4FA8D8, #7EC8E3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '40px', marginBottom: '10px',
+                    }}>🎵</div>
+                    <div style={{ color: '#2B3A45', fontWeight: 700, fontSize: '14px' }}>{pl.name}</div>
+                    <div style={{ color: '#7A93A3', fontSize: '12px' }}>{pl.songs.length} آهنگ</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* آهنگ‌های پرطرفدار */}
+        <section style={{ marginBottom: '44px' }}>
+          <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+            آهنگ‌های پرطرفدار
+          </h2>
+          {topSongs.map(song => (
+            <SongCard key={song.id} song={song} queue={topSongs} />
+          ))}
+        </section>
+
+        {/* آخرین آلبوم‌ها */}
+        <section style={{ marginBottom: '44px' }}>
+          <h2 style={{ color: '#2B3A45', marginBottom: '18px', fontSize: '20px', fontWeight: 800 }}>
+            آخرین آلبوم‌های منتشر شده
+          </h2>
+          <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
+            {mockAlbums.map(album => <AlbumCard key={album.id} album={album} />)}
+          </div>
+        </section>
+
+        {/* دسترسی زودهنگام - فقط طلایی */}
+        {isGold && (
+          <section style={{
+            background: 'linear-gradient(135deg, #FFF8E7, #FFF0CC)',
+            border: '1px solid #F0D898', borderRadius: '18px', padding: '28px', marginBottom: '40px',
+          }}>
+            <h2 style={{ color: '#B8860B', marginBottom: '8px', fontSize: '20px', fontWeight: 800 }}>
+              ⭐ دسترسی زودهنگام
+            </h2>
+            <p style={{ color: '#8A7548', marginBottom: '18px' }}>آهنگ‌های اختصاصی برای اشتراک طلایی</p>
+            {mockSongs.filter(s => s.isEarlyAccess).map(song => (
+              <SongCard key={song.id} song={song} queue={mockSongs.filter(s => s.isEarlyAccess)} />
+            ))}
+          </section>
+        )}
+      </MainLayout>
+    </>
   )
 }
-
-function RoleBadge({ role }: { role: string }) {
-  const labels: Record<string, { label: string; color: string }> = {
-    user:    { label: 'کاربر',    color: 'bg-blue-500/20 text-blue-300' },
-    artist:  { label: 'هنرمند',   color: 'bg-purple-500/20 text-purple-300' },
-    support: { label: 'پشتیبان',  color: 'bg-orange-500/20 text-orange-300' },
-    admin:   { label: 'مدیر',     color: 'bg-red-500/20 text-red-300' },
-  }
-  const { label, color } = labels[role] ?? { label: role, color: 'bg-gray-500/20 text-gray-300' }
-  return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>
-      {label}
-    </span>
-  )
-}
-
-function SubscriptionBadge({ tier }: { tier: string }) {
-  const labels: Record<string, { label: string; color: string }> = {
-    free:   { label: 'رایگان',   color: 'bg-gray-500/20 text-gray-400' },
-    silver: { label: 'نقره‌ای',  color: 'bg-gray-300/20 text-gray-200' },
-    gold:   { label: 'طلایی',    color: 'bg-yellow-500/20 text-yellow-400' },
-  }
-  const { label, color } = labels[tier] ?? { label: tier, color: '' }
-  return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>
-      {label}
-    </span>
-  )
-}
-
-export default Home

@@ -5,23 +5,29 @@
 export type UserRole = 'user' | 'artist' | 'support' | 'admin'
 export type SubscriptionTier = 'free' | 'silver' | 'gold'
 export type ArtistStatus = 'pending' | 'approved' | 'rejected'
+export type Gender = 'male' | 'female' | 'other'
 
 export interface User {
   id: string
-  username: string         // اختصاص‌داده‌شده توسط سامانه
-  displayName: string      // نام نمایشی
+  username: string
+  displayName: string
   email: string
+  passwordHash?: string
   role: UserRole
   subscription: SubscriptionTier
-  subscriptionExpiresAt?: string  // ISO date string
+  subscriptionExpiresAt?: string
   avatarUrl?: string
+  bio?: string
   birthDate?: string
-  gender?: 'male' | 'female' | 'other'
+  gender?: Gender
   followersCount: number
   followingCount: number
   dailyStreamCount: number
   createdAt: string
 }
+
+// alias تا کدهای قدیمی که از IUser استفاده کرده‌اند هم کار کنند
+export type IUser = User
 
 export interface Artist extends User {
   role: 'artist'
@@ -29,11 +35,14 @@ export interface Artist extends User {
   bio?: string
   status: ArtistStatus
   rejectionReason?: string
+  portfolioUrl?: string
   totalStreams: number
   uniqueListeners: number
   monthlyEarnings: number
   isVerified: boolean
 }
+
+export type IArtist = Artist
 
 // ============================================================
 // MUSIC TYPES
@@ -47,14 +56,14 @@ export interface Song {
   albumId?: string
   albumName?: string
   coverUrl: string
-  audioUrl?: string       // در فاز اول می‌تونه undefined باشه
-  duration: number        // ثانیه
+  audioUrl?: string
+  duration: number
   lyrics?: string
   genre?: string
   releaseYear?: number
   streamCount: number
   uniqueListenerCount: number
-  isEarlyAccess?: boolean // فقط برای اشتراک طلایی
+  isEarlyAccess?: boolean
   createdAt: string
 }
 
@@ -152,24 +161,20 @@ export interface PlayerState {
 }
 
 // ============================================================
-// SUBSCRIPTION TYPES
+// SUBSCRIPTION / ACCOUNTING TYPES
 // ============================================================
 
 export interface SubscriptionPricing {
-  silver: number  // تومان
-  gold: number    // تومان
+  silver: number
+  gold: number
 }
-
-// ============================================================
-// ACCOUNTING TYPES
-// ============================================================
 
 export type PaymentStatus = 'pending' | 'settled'
 
 export interface ArtistAccounting {
   artistId: string
   artistName: string
-  month: string          // مثلاً "1403-03"
+  month: string
   uniqueListeners: number
   totalStreams: number
   earnings: number
