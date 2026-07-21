@@ -75,3 +75,27 @@ docs: update conventions
 - هیچ‌وقت از `any` استفاده نکن
 - همه props رو type بزن
 - از `interface` برای object types استفاده کن
+
+---
+
+# 🚀 قراردادهای فاز دوم (بک‌اند Django/DRF)
+
+مستند کامل: [docs/backend/backend-conventions.md](backend/backend-conventions.md)
+
+## خلاصه
+| نوع | قرارداد | مثال |
+|-----|---------|------|
+| اپ جنگو | snake_case | `accounts`, `catalog`, `platform_ops` |
+| مدل | PascalCase مفرد | `Song`, `Artist`, `Ticket` |
+| فیلد مدل | snake_case | `created_at`, `is_verified` |
+| Serializer | `<Model>Serializer` | `SongSerializer` |
+| Permission | `Is<Role>` / `Can<Action>` | `IsArtistOwner` |
+| Route | جمع | `/api/v1/songs/` |
+
+- منطق role/subscription همیشه از `core/permissions.py` و `core/subscription_rules.py` — هیچ‌وقت کپی/hardcode نکن.
+- فرمت خطای مشترک:
+```json
+{"error": {"code": "PLAYLIST_LIMIT_REACHED", "message": "...", "details": {}}}
+```
+- Commit ها: `feat(accounts): ...`, `fix(catalog): ...`, `refactor(platform): ...`, `test(accounts): ...`, `docs(backend): ...`
+- برنچ‌های بک‌اند: `backend/<username>-<app>` (مثال: `backend/maani-accounts`)
