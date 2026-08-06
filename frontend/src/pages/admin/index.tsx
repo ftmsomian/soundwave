@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
               {/* خلاصه */}
               <div className="grid gap-4 md:grid-cols-3">
                 <SummaryCard label="درخواست هنرمند" value={formatNumber(mockArtists.filter(a => a.status === 'pending').length)} />
-                <SummaryCard label="تیکت فعال"      value={formatNumber(mockTickets.length)} />
+                <SummaryCard label="تیکت فعال"      value={formatNumber(mockTickets.filter(t => t.status !== 'closed').length)} />
                 <SummaryCard label="سطح دسترسی"    value={isAdmin ? 'مدیر' : 'پشتیبان'} />
               </div>
 

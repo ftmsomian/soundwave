@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { STORAGE_KEYS, ROUTES } from '@/constants'
-import { getFromStorage, setToStorage } from '@/mock'
-import type { Artist } from '@/types'
+import { ROUTES } from '@/constants'
+import { useAuth } from '@/context/AuthContext'
 
 export default function ArtistRegisterForm() {
   const router = useRouter()
+  const { registerArtist } = useAuth()
   const [form, setForm] = useState({ artistName: '', email: '', password: '', portfolioUrl: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
 
@@ -30,41 +31,27 @@ export default function ArtistRegisterForm() {
     if (!validate()) return
 
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 400))
+    const result = await registerArtist({
+      artistName: form.artistName,
+      email: form.email,
+      password: form.password,
+      portfolioUrl: form.portfolioUrl,
+    })
+    setIsLoading(false)
 
-    const existing = getFromStorage<Artist>(STORAGE_KEYS.ARTISTS)
-    if (existing.find(a => a.email === form.email)) {
-      setErrors({ email: 'این ایمیل قبلاً ثبت شده است' })
-      setIsLoading(false)
+    if (!result.success) {
+      const mapped: Record<string, string> = {}
+      if (result.fieldErrors?.email) mapped.email = result.fieldErrors.email
+      if (result.fieldErrors?.artist_name) mapped.artistName = result.fieldErrors.artist_name
+      if (result.fieldErrors?.portfolio_url) mapped.portfolioUrl = result.fieldErrors.portfolio_url
+      if (result.fieldErrors?.password) mapped.password = result.fieldErrors.password
+      setErrors(Object.keys(mapped).length > 0 ? mapped : { email: result.error ?? 'خطا در ثبت‌نام' })
       return
     }
 
-    const newArtist: Artist = {
-      id: `artist_${Date.now()}`,
-      username: `artist_${Math.floor(Math.random() * 90000) + 10000}`,
-      displayName: form.artistName,
-      artistName: form.artistName,
-      email: form.email,
-      passwordHash: form.password,
-      role: 'artist',
-      subscription: 'free',
-      status: 'pending',
-      isVerified: false,
-      portfolioUrl: form.portfolioUrl,
-      followersCount: 0,
-      followingCount: 0,
-      dailyStreamCount: 0,
-      totalStreams: 0,
-      uniqueListeners: 0,
-      monthlyEarnings: 0,
-      createdAt: new Date().toISOString(),
-    }
-
-    setToStorage(STORAGE_KEYS.ARTISTS, [...existing, newArtist])
-    localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(newArtist))
-
-    setIsLoading(false)
-    router.push('/artist/manage')
+    // نکته: بک‌اند برای هنرمندِ در وضعیت pending توکن نمی‌ده، پس اینجا لاگین نمی‌شیم؛
+    // پیام موفقیت نشون می‌دیم و کاربر رو به صفحه‌ی ورود می‌فرستیم (بعد از تأیید پشتیبان/مدیر).
+    setSubmitted(true)
   }
 
   const inputClass = (field: string) =>
@@ -81,6 +68,20 @@ export default function ArtistRegisterForm() {
         </div>
 
         <div className="bg-[#181818] border border-[#282828] rounded-2xl p-8">
+          {submitted ? (
+            <div className="text-center">
+              <div className="text-5xl mb-4">⏳</div>
+              <h2 className="text-xl font-bold text-white mb-2">درخواست شما ثبت شد</h2>
+              <p className="text-[#B3B3B3] text-sm mb-6">
+                حساب هنرمند شما در وضعیت «در انتظار تأیید» است. پس از بررسی و تأیید توسط پشتیبانی یا مدیر سامانه،
+                می‌توانید از همین صفحه‌ی ورود وارد شوید.
+              </p>
+              <Link href={ROUTES.login} className="btn-primary inline-block px-6 py-3">
+                بازگشت به صفحه ورود
+              </Link>
+            </div>
+          ) : (
+          <>
           <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 mb-5 text-sm text-yellow-200">
             ⏳ حساب هنرمند پس از بررسی توسط مدیر فعال می‌شود.
           </div>
@@ -122,6 +123,8 @@ export default function ArtistRegisterForm() {
           <div className="mt-4 text-center text-sm">
             <Link href={ROUTES.login} className="text-[#1DB954] hover:underline">بازگشت به صفحه ورود</Link>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

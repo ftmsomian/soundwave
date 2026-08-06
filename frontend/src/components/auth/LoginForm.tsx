@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/hooks/useAuth'
 import type { UserRole } from '@/types'
-import { ROUTES, STORAGE_KEYS } from '@/constants'
+import { ROUTES } from '@/constants'
 
 const ROLE_REDIRECT: Record<UserRole, string> = {
   user:    ROUTES.home,
@@ -30,9 +30,7 @@ export default function LoginForm() {
     if (!password)                        { setError('رمز عبور الزامی است'); return }
 
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 400))
-
-    const result = login(email, password)
+    const result = await login(email, password)
     setIsLoading(false)
 
     if (!result.success) {
@@ -40,9 +38,7 @@ export default function LoginForm() {
       return
     }
 
-    const raw = localStorage.getItem(STORAGE_KEYS.AUTH_USER)
-    const loggedUser = raw ? JSON.parse(raw) : null
-    const redirect = loggedUser ? ROLE_REDIRECT[loggedUser.role as UserRole] : ROUTES.home
+    const redirect = result.user ? ROLE_REDIRECT[result.user.role as UserRole] : ROUTES.home
     router.push(redirect)
   }
 

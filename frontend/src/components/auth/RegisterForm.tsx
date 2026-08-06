@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { STORAGE_KEYS, ROUTES } from '@/constants'
-import { getFromStorage, setToStorage } from '@/mock'
-import type { User, Gender } from '@/types'
+import { ROUTES } from '@/constants'
+import { useAuth } from '@/context/AuthContext'
+import type { Gender } from '@/types'
 
 function PrivacyModal({ onClose }: { onClose: () => void }) {
   return (
@@ -30,6 +30,7 @@ function PrivacyModal({ onClose }: { onClose: () => void }) {
 
 export default function RegisterForm() {
   const router = useRouter()
+  const { register } = useAuth()
   const [showPrivacy, setShowPrivacy] = useState(false)
 
   const [form, setForm] = useState({
@@ -67,35 +68,29 @@ export default function RegisterForm() {
     if (!validate()) return
 
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 400))
+    const result = await register({
+      displayName: form.displayName,
+      email: form.email,
+      password: form.password,
+      passwordConfirm: form.confirmPassword,
+      birthDate: form.birthDate,
+      gender: form.gender as Gender,
+    })
+    setIsLoading(false)
 
-    const existing = getFromStorage<User>(STORAGE_KEYS.USERS)
-    if (existing.find(u => u.email === form.email)) {
-      setErrors({ email: 'این ایمیل قبلاً ثبت شده است' })
-      setIsLoading(false)
+    if (!result.success) {
+      // اگه بک‌اند خطای فیلد-به-فیلد برگردونده (مثلاً ایمیل تکراری)، همون رو زیر فیلد مربوطه نشون بده
+      const mapped: Record<string, string> = {}
+      if (result.fieldErrors?.email) mapped.email = result.fieldErrors.email
+      if (result.fieldErrors?.display_name) mapped.displayName = result.fieldErrors.display_name
+      if (result.fieldErrors?.birth_date) mapped.birthDate = result.fieldErrors.birth_date
+      if (result.fieldErrors?.gender) mapped.gender = result.fieldErrors.gender
+      if (result.fieldErrors?.password) mapped.password = result.fieldErrors.password
+      if (result.fieldErrors?.password_confirm) mapped.confirmPassword = result.fieldErrors.password_confirm
+      setErrors(Object.keys(mapped).length > 0 ? mapped : { email: result.error ?? 'خطا در ثبت‌نام' })
       return
     }
 
-    const newUser: User = {
-      id: `user_${Date.now()}`,
-      username: `user_${Math.floor(Math.random() * 90000) + 10000}`,
-      displayName: form.displayName,
-      email: form.email,
-      passwordHash: form.password,
-      role: 'user',
-      subscription: 'free',
-      birthDate: form.birthDate,
-      gender: form.gender as Gender,
-      followersCount: 0,
-      followingCount: 0,
-      dailyStreamCount: 0,
-      createdAt: new Date().toISOString(),
-    }
-
-    setToStorage(STORAGE_KEYS.USERS, [...existing, newUser])
-    localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(newUser))
-
-    setIsLoading(false)
     router.push(ROUTES.home)
   }
 

@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { PLAYER_TICK_MS, ROUTES } from '@/constants'
+import { ROUTES } from '@/constants'
 import { useAuth } from '@/context/AuthContext'
 import { usePlayer } from '@/context/PlayerContext'
-import type { RepeatMode, Song } from '@/types'
+import type { AudioQuality, RepeatMode, Song } from '@/types'
 import { formatCompactNumber } from '@/utils'
 import ProgressBar from './ProgressBar'
 import Queue from './Queue'
@@ -13,6 +13,11 @@ const repeatLabels: Record<RepeatMode, string> = {
   none: 'بدون تکرار',
   all:  'تکرار لیست',
   one:  'تکرار آهنگ',
+}
+
+const qualityLabels: Record<AudioQuality, string> = {
+  low: 'کیفیت پایین',
+  high: 'کیفیت بالا',
 }
 
 function getNextRepeatMode(mode: RepeatMode): RepeatMode {
@@ -26,24 +31,60 @@ export default function MusicPlayer() {
   const { currentUser } = useAuth()
   const [isQueueOpen, setIsQueueOpen] = useState(false)
   const [isMobileExpanded, setIsMobileExpanded] = useState(false)
+  // بخش درخواستی: امکان بستن نوار پخش‌کننده با دکمه‌ی × — با پخش دوباره‌ی هر آهنگی (حتی همون آهنگ قبلی) دوباره ظاهر می‌شه
+  const [isDismissed, setIsDismissed] = useState(false)
+
+  useEffect(() => {
+    if (player.lastPlayedAt > 0) setIsDismissed(false)
+  }, [player.lastPlayedAt])
+
+  // پخش‌کننده فقط باید وقتی کاربر لاگین کرده نمایش داده بشه.
+  // قبلاً این کامپوننت در _app.tsx بدون هیچ شرطی رندر می‌شد و در صفحه‌ی لاگین/ثبت‌نام هم دیده می‌شد.
+  if (!currentUser) return null
+  // اگه کاربر با دکمه‌ی × نوار رو بسته، تا وقتی آهنگ جدیدی پخش نشه چیزی رندر نمی‌شه
+  // (خود صدا در PlayerContext مستقل از این UI ادامه پیدا می‌کنه، فقط نوار مخفیه)
+  if (isDismissed) return null
 
   const currentSong = player.currentSong
   const canViewStats = currentUser?.subscription === 'gold'
   const duration = currentSong?.duration ?? 0
+  // بخش امتیازی: رنگ غالب کاور آهنگ فعلی، برای هماهنگی رنگ دکمه‌ها/نوار پیشرفت با کاور
+  const accentColor = currentSong ? player.dominantColor : '#1DB954'
 
-  // تایمر پخش
-  useEffect(() => {
-    if (!player.isPlaying || !currentSong) return undefined
-    const timerId = window.setTimeout(() => {
-      const nextTime = player.currentTime + 1
-      if (nextTime >= currentSong.duration) {
-        player.playNext()
-      } else {
-        player.seekTo(nextTime)
-      }
-    }, PLAYER_TICK_MS)
-    return () => window.clearTimeout(timerId)
-  }, [currentSong, player])
+  function nextQuality(q: AudioQuality): AudioQuality {
+    return q === 'low' ? 'high' : 'low'
+  }
+
+  function QualityAndCrossfadeControls({ compact = false }: { compact?: boolean }) {
+    return (
+      <div className={`flex items-center gap-2 ${compact ? 'justify-center' : ''}`}>
+        <button
+          className="rounded-full bg-[#282828] px-3 py-2 text-xs text-white transition-colors hover:bg-[#3E3E3E]"
+          onClick={() => player.setQuality(nextQuality(player.quality))}
+          title="کیفیت پخش"
+          type="button"
+        >
+          🎚 {qualityLabels[player.quality]}
+        </button>
+        <button
+          className="rounded-full px-3 py-2 text-xs transition-colors"
+          onClick={player.toggleCrossfade}
+          style={
+            player.isCrossfadeEnabled
+              ? { background: accentColor, color: '#000' }
+              : { background: '#282828', color: '#fff' }
+          }
+          title="محو تدریجی بین دو آهنگ (Crossfade)"
+          type="button"
+        >
+          🎧 Crossfade {player.isCrossfadeEnabled ? 'روشن' : 'خاموش'}
+        </button>
+      </div>
+    )
+  }
+
+  // پخش واقعی صدا (عنصر <audio>) داخل PlayerContext مدیریت می‌شود؛
+  // اینجا فقط از currentTime/isPlaying که از همون audio واقعی sync می‌شن استفاده می‌کنیم.
 
   function handleSelectSong(song: Song) {
     player.playSong(song, player.queue)
@@ -130,6 +171,9 @@ export default function MusicPlayer() {
                 <p>{formatCompactNumber(currentSong.uniqueListenerCount)} شنونده</p>
               </div>
             )}
+            <div className="hidden md:block">
+              <QualityAndCrossfadeControls />
+            </div>
             <button
               className={`rounded-full px-3 py-2 text-sm transition-colors ${isQueueOpen ? 'bg-[#1DB954] text-black' : 'bg-[#282828] text-white hover:bg-[#3E3E3E]'}`}
               onClick={() => setIsQueueOpen(prev => !prev)}
@@ -138,6 +182,15 @@ export default function MusicPlayer() {
               صف پخش
             </button>
             <VolumeControl onVolumeChange={player.setVolume} volume={player.volume} />
+            <button
+              aria-label="بستن نوار پخش‌کننده"
+              className="rounded-full bg-[#282828] px-3 py-2 text-sm text-white transition-colors hover:bg-[#3E3E3E]"
+              onClick={() => setIsDismissed(true)}
+              title="بستن (پخش صدا ادامه پیدا می‌کنه؛ با پخش دوباره‌ی آهنگی، این نوار برمی‌گرده)"
+              type="button"
+            >
+              ✕
+            </button>
           </div>
         </div>
 
@@ -149,9 +202,9 @@ export default function MusicPlayer() {
       </div>
 
       {/* ── موبایل - نوار پایین ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#282828] bg-[#181818]/95 p-3 backdrop-blur md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center gap-2 border-t border-[#282828] bg-[#181818]/95 p-3 backdrop-blur md:hidden">
         <button
-          className="flex w-full items-center justify-between gap-3 text-right"
+          className="flex min-w-0 flex-1 items-center justify-between gap-3 text-right"
           onClick={() => setIsMobileExpanded(true)}
           type="button"
         >
@@ -164,6 +217,14 @@ export default function MusicPlayer() {
           >
             {player.isPlaying ? '⏸' : '▶'}
           </span>
+        </button>
+        <button
+          aria-label="بستن نوار پخش‌کننده"
+          className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-[#282828] text-white"
+          onClick={() => setIsDismissed(true)}
+          type="button"
+        >
+          ✕
         </button>
       </div>
 
@@ -198,6 +259,10 @@ export default function MusicPlayer() {
 
               <div className="mt-4 flex justify-center">
                 <VolumeControl onVolumeChange={player.setVolume} volume={player.volume} />
+              </div>
+
+              <div className="mt-4 flex justify-center">
+                <QualityAndCrossfadeControls compact />
               </div>
 
               {currentSong.lyrics && (

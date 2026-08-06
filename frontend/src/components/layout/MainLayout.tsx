@@ -8,9 +8,8 @@ interface Props {
 export default function MainLayout({ children }: Props) {
   return (
     <div
+      className="flex min-h-screen flex-col md:flex-row"
       style={{
-        display: 'flex',
-        minHeight: '100vh',
         background: '#FDF8EF',
         color: '#2B3A45',
         fontFamily: 'Vazirmatn, Tahoma, sans-serif',
@@ -19,10 +18,10 @@ export default function MainLayout({ children }: Props) {
     >
       <Sidebar />
       <main
+        className="px-4 py-6 md:px-12 md:py-10"
         style={{
           flex: 1,
-          padding: '40px 48px',
-          paddingBottom: '120px', // فضا برای music player ثابت پایین
+          paddingBottom: '120px', // فضا برای music player ثابت پایین (فقط وقتی کاربر لاگین است نمایش داده می‌شود)
           overflowY: 'auto',
           background: 'linear-gradient(180deg, #EAF4FB 0%, #FDF8EF 100%)',
           minHeight: '100vh',

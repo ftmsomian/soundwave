@@ -57,6 +57,11 @@ export interface Song {
   albumName?: string
   coverUrl: string
   audioUrl?: string
+  /** فایل‌های صوتی با کیفیت‌های مختلف (بخش امتیازی «پخش‌کننده پیشرفته»). اگه موجود نباشه از audioUrl برای هر دو کیفیت استفاده می‌شه. */
+  audioQualities?: {
+    low: string
+    high: string
+  }
   duration: number
   lyrics?: string
   genre?: string
@@ -149,6 +154,7 @@ export interface Ticket {
 // ============================================================
 
 export type RepeatMode = 'none' | 'all' | 'one'
+export type AudioQuality = 'low' | 'high'
 
 export interface PlayerState {
   currentSong: Song | null
@@ -158,6 +164,15 @@ export interface PlayerState {
   volume: number
   repeatMode: RepeatMode
   isShuffle: boolean
+  /** بخش امتیازی: کیفیت پخش */
+  quality: AudioQuality
+  /** بخش امتیازی: حالت Crossfade روشن/خاموش */
+  isCrossfadeEnabled: boolean
+  /** بخش امتیازی: رنگ غالب کاور آهنگ فعلی، برای هماهنگ‌سازی رنگ ویجت‌های پخش‌کننده */
+  dominantColor: string
+  /** هر بار که آهنگی پخش می‌شه (حتی اگه همون آهنگ قبلی باشه) آپدیت می‌شه؛
+   * برای این استفاده می‌شه که اگه کاربر نوار پخش‌کننده رو با دکمه‌ی × بسته باشه، با پخش دوباره یک آهنگ برگرده. */
+  lastPlayedAt: number
 }
 
 // ============================================================

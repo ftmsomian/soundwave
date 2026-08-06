@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { ROUTES } from '@/constants'
 
@@ -14,6 +15,7 @@ const navItems = [
 export default function Sidebar() {
   const router = useRouter()
   const { currentUser, logout } = useAuth()
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   const extraItems =
     currentUser?.role === 'artist'
@@ -22,20 +24,17 @@ export default function Sidebar() {
       ? [{ href: ROUTES.admin, label: 'داشبورد مدیریت', icon: '🛠️' }]
       : []
 
-  return (
+  function handleLogout() {
+    setIsMobileOpen(false)
+    logout()
+  }
+
+  const sidebarContent = (
     <aside
+      className="flex h-full w-[240px] flex-col overflow-y-auto"
       style={{
-        width: '240px',
-        minHeight: '100vh',
         background: 'linear-gradient(180deg, #EAF4FB 0%, #FDF8EF 100%)',
-        borderRight: '1px solid #DCE8F0',
-        display: 'flex',
-        flexDirection: 'column',
-        boxShadow: '2px 0 16px rgba(135,180,210,0.15)',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        overflowY: 'auto',
+        borderInlineStart: '1px solid #DCE8F0',
       }}
     >
       {/* لوگو */}
@@ -80,8 +79,10 @@ export default function Sidebar() {
       </nav>
 
       {/* اطلاعات کاربر */}
+      {/* توجه: paddingBottom اضافه اینجا عمداً هست چون نوار پخش‌کننده (پایین صفحه) با z-index بالاتر
+          روی کل عرض صفحه (از جمله سایدبار) قرار می‌گیره؛ بدون این فاصله، دکمه‌ی خروج پشت اون نوار پنهان می‌شد. */}
       {currentUser && (
-        <div style={{ padding: '16px', borderTop: '1px solid #DCE8F0' }}>
+        <div style={{ padding: '16px', paddingBottom: '110px', borderTop: '1px solid #DCE8F0' }}>
           <Link
             href={ROUTES.profile(currentUser.username)}
             style={{ textDecoration: 'none' }}
@@ -121,7 +122,7 @@ export default function Sidebar() {
             </div>
           </Link>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             style={{
               marginTop: '8px', width: '100%', padding: '8px',
               background: 'transparent', border: '1px solid #DCE8F0',
@@ -129,10 +130,71 @@ export default function Sidebar() {
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            خروج از حساب
+            🚪 خروج از حساب
           </button>
         </div>
       )}
     </aside>
+  )
+
+  return (
+    <>
+      {/* ── دسکتاپ: سایدبار ثابت ── */}
+      <div className="sticky top-0 hidden h-screen shadow-[2px_0_16px_rgba(135,180,210,0.15)] md:block">
+        {sidebarContent}
+      </div>
+
+      {/* ── موبایل/تبلت: نوار بالا با دکمه منو ── */}
+      <div
+        className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 md:hidden"
+        style={{ background: '#FDF8EF', borderBottom: '1px solid #DCE8F0' }}
+      >
+        <div className="flex items-center gap-2">
+          <span style={{ fontSize: '22px' }}>🎵</span>
+          <span
+            style={{
+              fontSize: '18px', fontWeight: 800,
+              background: 'linear-gradient(90deg, #4FA8D8, #7EC8E3)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            }}
+          >
+            SoundWave
+          </span>
+        </div>
+        <button
+          aria-label="باز کردن منو"
+          onClick={() => setIsMobileOpen(true)}
+          style={{
+            fontSize: '22px', background: 'transparent', border: 'none', cursor: 'pointer',
+          }}
+        >
+          ☰
+        </button>
+      </div>
+
+      {/* ── موبایل: منوی کشویی ── */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          {/* بک‌دراپ */}
+          <div
+            className="flex-1 bg-black/40"
+            onClick={() => setIsMobileOpen(false)}
+          />
+          {/* پنل منو */}
+          <div className="h-full w-[240px] shadow-2xl">
+            <div className="flex items-center justify-end p-3">
+              <button
+                aria-label="بستن منو"
+                onClick={() => setIsMobileOpen(false)}
+                style={{ fontSize: '20px', background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+            <div onClick={() => setIsMobileOpen(false)}>{sidebarContent}</div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

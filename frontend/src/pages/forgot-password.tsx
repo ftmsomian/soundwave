@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useState } from 'react'
 import { ROUTES } from '@/constants'
+import { apiForgotPassword } from '@/lib/api'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail]           = useState('')
@@ -16,7 +17,13 @@ export default function ForgotPasswordPage() {
     if (!/\S+@\S+\.\S+/.test(email))     { setError('فرمت ایمیل نادرست است'); return }
 
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 600))
+    // نکته: بک‌اند برای جلوگیری از افشای اینکه یک ایمیل ثبت‌نام کرده یا نه، همیشه پیام موفقیت
+    // برمی‌گردونه (چه ایمیل وجود داشته باشه چه نه) — پس اینجا نیازی به مدیریت خطا نیست.
+    try {
+      await apiForgotPassword(email)
+    } catch {
+      // حتی در صورت خطای شبکه، پیام عمومی رو نشون می‌دیم تا کاربر گیج نشه
+    }
     setIsLoading(false)
     setSubmitted(true)
   }

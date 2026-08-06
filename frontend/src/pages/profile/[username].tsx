@@ -2,33 +2,53 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { STORAGE_KEYS, SUBSCRIPTION_LIMITS, SUBSCRIPTION_LABELS, DEFAULT_AVATAR, ROUTES } from '@/constants'
-import { getFromStorage } from '@/mock'
+import { SUBSCRIPTION_LIMITS, SUBSCRIPTION_LABELS, DEFAULT_AVATAR, ROUTES } from '@/constants'
+import { apiGetPublicProfile, apiToggleFollow, ApiError } from '@/lib/api'
 import MainLayout from '@/components/layout/MainLayout'
 import type { User } from '@/types'
+
+type ProfileState = (User & { isFollowedByMe: boolean }) | null
 
 export default function ProfilePage() {
   const router = useRouter()
   const { username } = router.query
-  const { user: me, updateUser, isLoading } = useAuth()
+  const { user: me, updateUser, uploadAvatar, isLoading } = useAuth()
 
-  const [profile, setProfile]       = useState<User | null>(null)
-  const [notFound, setNotFound]     = useState(false)
-  const [isFollowing, setIsFollowing] = useState(false)
-  const [isEditing, setIsEditing]   = useState(false)
-  const [editName, setEditName]     = useState('')
-  const [editBio, setEditBio]       = useState('')
+  const [profile, setProfile] = useState<ProfileState>(null)
+  const [notFound, setNotFound] = useState(false)
+  const [isFollowLoading, setIsFollowLoading] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [avatarError, setAvatarError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
+  const isOwnProfile = me?.username === username
+
+  async function loadProfile() {
+    if (!username || typeof username !== 'string') return
+    // اگه پروفایل خودمونه، دیتای تازه‌ی خودِ context رو استفاده می‌کنیم (شامل ایمیل/تاریخ تولد هم هست)
+    if (me && me.username === username) {
+      setProfile({ ...me, isFollowedByMe: false })
+      setEditName(me.displayName)
+      setEditBio(me.bio ?? '')
+      return
+    }
+    try {
+      const data = await apiGetPublicProfile(username)
+      setProfile(data)
+      setEditName(data.displayName)
+      setEditBio(data.bio ?? '')
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) setNotFound(true)
+    }
+  }
+
   useEffect(() => {
-    if (!username) return
-    const users = getFromStorage<User>(STORAGE_KEYS.USERS)
-    const found = users.find(u => u.username === username)
-    if (!found) { setNotFound(true); return }
-    setProfile(found)
-    setEditName(found.displayName)
-    setEditBio(found.bio ?? '')
-  }, [username])
+    setNotFound(false)
+    loadProfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username, me])
 
   useEffect(() => {
     if (!isLoading && !me) router.push(ROUTES.login)
@@ -52,28 +72,45 @@ export default function ProfilePage() {
     )
   }
 
-  const isOwnProfile  = me?.username === username
   const canUploadAvatar = me ? SUBSCRIPTION_LIMITS[me.subscription].canUploadAvatar : false
   const subLabel = SUBSCRIPTION_LABELS[profile!.subscription]
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!profile || !isOwnProfile) return
-    const updates = { displayName: editName, bio: editBio }
-    updateUser(updates)
-    setProfile(prev => prev ? { ...prev, ...updates } : prev)
-    setIsEditing(false)
+    const result = await updateUser({ displayName: editName, bio: editBio })
+    if (result.success) {
+      setProfile(prev => (prev ? { ...prev, displayName: editName, bio: editBio } : prev))
+      setIsEditing(false)
+    }
   }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !isOwnProfile) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
-      updateUser({ avatarUrl: dataUrl })
-      setProfile(prev => prev ? { ...prev, avatarUrl: dataUrl } : prev)
+    setAvatarError('')
+    const result = await uploadAvatar(file)
+    if (!result.success) {
+      setAvatarError(result.error ?? 'خطا در آپلود عکس')
+      return
     }
-    reader.readAsDataURL(file)
+    if (result.user) setProfile(prev => (prev ? { ...prev, avatarUrl: result.user!.avatarUrl } : prev))
+  }
+
+  const handleToggleFollow = async () => {
+    if (!profile || isOwnProfile || typeof username !== 'string') return
+    setIsFollowLoading(true)
+    try {
+      const { following } = await apiToggleFollow(username)
+      setProfile(prev =>
+        prev
+          ? { ...prev, isFollowedByMe: following, followersCount: prev.followersCount + (following ? 1 : -1) }
+          : prev
+      )
+    } catch {
+      // اگه خطا خورد، وضعیت رو دست‌نخورده می‌ذاریم؛ کاربر می‌تونه دوباره امتحان کنه
+    } finally {
+      setIsFollowLoading(false)
+    }
   }
 
   return (
@@ -105,6 +142,9 @@ export default function ProfilePage() {
                 <div className="absolute -bottom-6 left-0 text-[#B3B3B3] text-xs whitespace-nowrap">
                   (اشتراک نقره‌ای به بالا)
                 </div>
+              )}
+              {avatarError && (
+                <p className="absolute top-full mt-2 w-48 text-red-400 text-xs">{avatarError}</p>
               )}
             </div>
 
@@ -145,8 +185,9 @@ export default function ProfilePage() {
           {/* آمار */}
           <div className="grid grid-cols-3 gap-4 mt-4">
             {[
-              { label: 'دنبال‌کننده',  value: profile!.followersCount + (isFollowing ? 1 : 0) },
+              { label: 'دنبال‌کننده',  value: profile!.followersCount },
               { label: 'دنبال‌شونده',  value: profile!.followingCount },
+              // نکته: شمارش استریم روزانه از StreamLog می‌آد که در اپ catalog است و هنوز نوشته نشده.
               { label: 'استریم امروز', value: profile!.dailyStreamCount },
             ].map(item => (
               <div key={item.label} className="bg-[#181818] border border-[#282828] rounded-xl p-4 text-center">
@@ -173,12 +214,13 @@ export default function ProfilePage() {
               )
             ) : (
               <button
-                onClick={() => setIsFollowing(prev => !prev)}
-                className={`flex-1 py-2 rounded-full text-sm font-bold transition-colors ${
-                  isFollowing ? 'bg-[#282828] border border-[#535353] text-[#B3B3B3] hover:text-white' : 'btn-primary'
+                onClick={handleToggleFollow}
+                disabled={isFollowLoading}
+                className={`flex-1 py-2 rounded-full text-sm font-bold transition-colors disabled:opacity-60 ${
+                  profile!.isFollowedByMe ? 'bg-[#282828] border border-[#535353] text-[#B3B3B3] hover:text-white' : 'btn-primary'
                 }`}
               >
-                {isFollowing ? 'لغو دنبال کردن' : 'دنبال کردن'}
+                {profile!.isFollowedByMe ? 'لغو دنبال کردن' : 'دنبال کردن'}
               </button>
             )}
           </div>
