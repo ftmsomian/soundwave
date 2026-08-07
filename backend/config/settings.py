@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "core",
     "accounts",
     "catalog",
+    "platform_ops",
 ]
 
 MIDDLEWARE = [
@@ -122,3 +123,19 @@ CORS_ALLOWED_ORIGINS = env.list(
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@soundwave.local")
 FRONTEND_RESET_PASSWORD_URL = env("FRONTEND_RESET_PASSWORD_URL", default="http://localhost:3000/reset-password")
+# Member 3 — payment gateway and artist accounting
+ZARINPAL_MERCHANT_ID = env("ZARINPAL_MERCHANT_ID", default="")
+ZARINPAL_SANDBOX = env.bool("ZARINPAL_SANDBOX", default=True)
+ZARINPAL_CURRENCY = env("ZARINPAL_CURRENCY", default="IRT")
+ZARINPAL_TIMEOUT_SECONDS = env.int("ZARINPAL_TIMEOUT_SECONDS", default=10)
+PAYMENT_CALLBACK_URL = env("PAYMENT_CALLBACK_URL", default="")
+
+ARTIST_EARNING_PER_UNIQUE_LISTENER = env(
+    "ARTIST_EARNING_PER_UNIQUE_LISTENER",
+    default="0.50",
+)
+
+ARTIST_EARNING_PER_STREAM = env(
+    "ARTIST_EARNING_PER_STREAM",
+    default="0.01",
+)
